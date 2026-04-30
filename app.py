@@ -576,7 +576,6 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
     commands = [
         "0.95 0.93 0.88 rg 32 72 531 698 re f",
         "0.47 0.40 0.30 RG 1 w",
-        _pdf_text_run(40, page_height - 52, "Bingo plate", 24),
     ]
 
     for row in range(GRID_SIZE):
@@ -603,12 +602,58 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
 def _wrap_pdf_text(text: str, max_width: float, font_size: float) -> list[str]:
     safe_text = _sanitize_pdf_text(text)
     approx_chars = max(4, int(max_width / (font_size * 0.52)))
-    lines = textwrap.wrap(safe_text, width=approx_chars, break_long_words=True, break_on_hyphens=False)
+    lines = _wrap_pdf_text_with_hyphenation(safe_text, approx_chars)
     if not lines:
         return [""]
     if len(lines) > 6:
         lines = lines[:6]
         lines[-1] = lines[-1][: max(1, len(lines[-1]) - 1)].rstrip() + "..."
+    return lines
+
+
+def _wrap_pdf_text_with_hyphenation(text: str, width: int) -> list[str]:
+    if not text:
+        return []
+
+    wrapper = textwrap.TextWrapper(
+        width=width,
+        break_long_words=False,
+        break_on_hyphens=True,
+        drop_whitespace=True,
+        replace_whitespace=False,
+    )
+    lines: list[str] = []
+
+    for paragraph in text.split("\n"):
+        tokens = paragraph.split()
+        if not tokens:
+            continue
+        current_line = ""
+        for token in tokens:
+            if len(token) <= width:
+                candidate = token if not current_line else f"{current_line} {token}"
+                if len(candidate) <= width:
+                    current_line = candidate
+                    continue
+                if current_line:
+                    lines.append(current_line)
+                current_line = token
+                continue
+
+            if current_line:
+                lines.append(current_line)
+                current_line = ""
+
+            remaining = token
+            while len(remaining) > width:
+                chunk = remaining[: max(1, width - 1)]
+                lines.append(f"{chunk}-")
+                remaining = remaining[len(chunk) :]
+            current_line = remaining
+
+        if current_line:
+            lines.append(current_line)
+
     return lines
 
 
