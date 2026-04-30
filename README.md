@@ -28,7 +28,7 @@ python -m compileall -q .
 
 ## Usage notes
 
-- Enter at least 24 unique lines.
+- Enter at least 25 unique lines.
 - The app removes duplicate lines case-insensitively.
 - PDF export reuses the same generated set currently shown in the preview.
 

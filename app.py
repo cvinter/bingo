@@ -11,8 +11,7 @@ from secrets import token_hex
 ROOT = Path(__file__).resolve().parent
 STATIC_DIR = ROOT / "static"
 GRID_SIZE = 5
-FREE_INDEX = 12
-MIN_QUESTIONS = 24
+MIN_QUESTIONS = GRID_SIZE * GRID_SIZE
 MAX_PLATES = 100
 DEFAULT_PLATE_COUNT = 4
 SAMPLE_QUESTIONS = [
@@ -185,9 +184,7 @@ def _generate_boards(questions: list[str], count: int, generation_seed: str) -> 
 
     while len(boards) < count and attempts < max_attempts:
         attempts += 1
-        cells = rng.sample(questions, MIN_QUESTIONS)
-        rng.shuffle(cells)
-        board = cells[:FREE_INDEX] + ["FREE"] + cells[FREE_INDEX:]
+        board = rng.sample(questions, MIN_QUESTIONS)
         signature = tuple(board)
         if signature in seen_layouts:
             continue
@@ -316,7 +313,7 @@ def _render_homepage(script_name: str) -> str:
             '<p class="stat-panel__label">Current set</p>',
             '<p id="plate-summary" class="stat-panel__value">4 plates</p>',
             '<p id="question-summary" class="stat-panel__meta">32 unique questions available</p>',
-            '<p class="stat-panel__hint">Every card keeps a free center square. You need at least 24 unique lines to fill the remaining spots.</p>',
+            '<p class="stat-panel__hint">Each plate uses 25 of your questions. Add more lines if you want more variation across the set.</p>',
             '</aside>',
             '</section>',
             '<section class="result-section">',
@@ -391,7 +388,7 @@ def _build_pdf_document(boards: list[list[str]]) -> bytes:
     page_refs = " ".join(f"{page_id} 0 R" for page_id in page_object_ids)
     objects[0] = b"<< /Type /Catalog /Pages 2 0 R >>"
     objects[1] = f"<< /Type /Pages /Kids [{page_refs}] /Count {len(page_object_ids)} >>".encode("ascii")
-    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>")
     return _assemble_pdf(objects)
 
 
@@ -413,11 +410,9 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
             x = margin_x + (col * cell_width)
             y = grid_top - ((row + 1) * cell_height)
             label = board[index]
-            if label == "FREE":
-                commands.append(f"0.88 0.37 0.24 rg {x:.2f} {y:.2f} {cell_width:.2f} {cell_height:.2f} re f")
             commands.append(f"0.47 0.40 0.30 RG {x:.2f} {y:.2f} {cell_width:.2f} {cell_height:.2f} re S")
 
-            font_size = 9.5 if label != "FREE" else 15
+            font_size = 9.5
             lines = _wrap_pdf_text(label, max_width=cell_width - 16, font_size=font_size)
             line_height = font_size + 2
             block_height = line_height * len(lines)
@@ -425,11 +420,7 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
 
             for line_index, line in enumerate(lines):
                 line_y = first_line_y - (line_index * line_height)
-                if label == "FREE":
-                    text_x = x + (cell_width / 2) - (_estimate_pdf_text_width(line, font_size) / 2)
-                    commands.append(_pdf_text(text_x, line_y, line, font_size, color=(1, 0.98, 0.94)))
-                else:
-                    commands.append(_pdf_text(x + 8, line_y, line, font_size))
+                commands.append(_pdf_text(x + 8, line_y, line, font_size))
 
     return "\n".join(commands).encode("cp1252", "replace")
 
