@@ -16,6 +16,21 @@ MIN_QUESTIONS = GRID_SIZE * GRID_SIZE
 MAX_PLATES = 100
 DEFAULT_PLATE_COUNT = 22
 PDF_CAMERA_MARK = "\ufff0"
+PDF_VEHICLE_MARK = "\ufff1"
+PDF_DRINK_MARK = "\ufff2"
+PDF_MUSIC_MARK = "\ufff3"
+PDF_MONEY_MARK = "\ufff4"
+PDF_MAGNET_MARK = "\ufff5"
+PDF_GENERIC_MARK = "\ufff6"
+PDF_ICON_MARKERS = {
+    PDF_CAMERA_MARK,
+    PDF_VEHICLE_MARK,
+    PDF_DRINK_MARK,
+    PDF_MUSIC_MARK,
+    PDF_MONEY_MARK,
+    PDF_MAGNET_MARK,
+    PDF_GENERIC_MARK,
+}
 
 
 def application(environ, start_response):
@@ -409,8 +424,9 @@ def _sanitize_pdf_text(text: str) -> str:
     sanitized_parts: list[str] = []
 
     for char in text:
-        if _is_pdf_camera_char(char):
-            sanitized_parts.append(PDF_CAMERA_MARK)
+        icon_marker = _pdf_icon_marker_for_char(char)
+        if icon_marker:
+            sanitized_parts.append(icon_marker)
             continue
         try:
             char.encode("cp1252")
@@ -424,9 +440,28 @@ def _sanitize_pdf_text(text: str) -> str:
     return "".join(sanitized_parts)
 
 
-def _is_pdf_camera_char(char: str) -> bool:
+def _pdf_icon_marker_for_char(char: str) -> str:
+    if char in {"\ufe0f", "\u200d"}:
+        return ""
+
     name = unicodedata.name(char, "")
-    return "CAMERA" in name
+    if not name:
+        return PDF_GENERIC_MARK
+    if "CAMERA" in name:
+        return PDF_CAMERA_MARK
+    if any(keyword in name for keyword in ("BUS", "CAR", "AUTOMOBILE", "TRUCK", "TAXI", "TRAM", "BICYCLE", "MOTOR")):
+        return PDF_VEHICLE_MARK
+    if any(keyword in name for keyword in ("DRINK", "COCKTAIL", "BEER", "WINE", "BOTTLE", "GLASS", "TUMBLER", "CUP")):
+        return PDF_DRINK_MARK
+    if any(keyword in name for keyword in ("EURO", "BANKNOTE", "MONEY", "COIN", "DOLLAR", "POUND", "YEN", "CURRENCY")):
+        return PDF_MONEY_MARK
+    if any(keyword in name for keyword in ("MUSIC", "MUSICAL", "NOTE", "HEADPHONE", "SPEAKER", "RADIO", "HORN")):
+        return PDF_MUSIC_MARK
+    if "MAGNET" in name:
+        return PDF_MAGNET_MARK
+    if any(keyword in name for keyword in ("EMOJI", "SYMBOL", "SIGN", "ARROW", "STAR", "HEART", "FACE", "HAND", "FOOD", "ANIMAL", "BUILDING", "MAP", "FLAG")):
+        return PDF_GENERIC_MARK
+    return ""
 
 
 def _pdf_fallback_for_char(char: str) -> str:
@@ -443,7 +478,7 @@ def _pdf_fallback_for_char(char: str) -> str:
 def _estimate_pdf_text_width(text: str, font_size: float) -> float:
     width = 0.0
     for char in text:
-        if char == PDF_CAMERA_MARK:
+        if char in PDF_ICON_MARKERS:
             width += _pdf_icon_width(font_size)
         else:
             width += font_size * 0.48
@@ -471,9 +506,9 @@ def _pdf_text_commands(
         text_buffer.clear()
 
     for char in _sanitize_pdf_text(text):
-        if char == PDF_CAMERA_MARK:
+        if char in PDF_ICON_MARKERS:
             flush_text()
-            commands.extend(_pdf_camera_icon_commands(cursor_x, y, font_size))
+            commands.extend(_pdf_icon_commands(cursor_x, y, font_size, char))
             cursor_x += _pdf_icon_width(font_size)
             continue
         text_buffer.append(char)
@@ -493,6 +528,22 @@ def _pdf_text_run(x: float, y: float, text: str, font_size: float, color: tuple[
 
 def _pdf_icon_width(font_size: float) -> float:
     return font_size * 1.2
+
+
+def _pdf_icon_commands(x: float, y: float, font_size: float, marker: str) -> list[str]:
+    if marker == PDF_CAMERA_MARK:
+        return _pdf_camera_icon_commands(x, y, font_size)
+    if marker == PDF_VEHICLE_MARK:
+        return _pdf_vehicle_icon_commands(x, y, font_size)
+    if marker == PDF_DRINK_MARK:
+        return _pdf_drink_icon_commands(x, y, font_size)
+    if marker == PDF_MUSIC_MARK:
+        return _pdf_music_icon_commands(x, y, font_size)
+    if marker == PDF_MONEY_MARK:
+        return _pdf_money_icon_commands(x, y, font_size)
+    if marker == PDF_MAGNET_MARK:
+        return _pdf_magnet_icon_commands(x, y, font_size)
+    return _pdf_generic_icon_commands(x, y, font_size)
 
 
 def _pdf_camera_icon_commands(x: float, y: float, font_size: float) -> list[str]:
@@ -517,6 +568,88 @@ def _pdf_camera_icon_commands(x: float, y: float, font_size: float) -> list[str]
         f"1 1 1 rg {flash_x:.2f} {flash_y:.2f} {flash_size:.2f} {flash_size:.2f} re f",
     ]
     return commands
+
+
+def _pdf_vehicle_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    body_x = x + (font_size * 0.04)
+    body_y = y - (font_size * 0.12)
+    body_height = font_size * 0.52
+    roof_height = font_size * 0.18
+    wheel_size = font_size * 0.12
+    return [
+        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {width:.2f} {body_height:.2f} re f",
+        f"0.18 0.18 0.18 rg {body_x + (font_size * 0.16):.2f} {body_y + body_height:.2f} {width * 0.56:.2f} {roof_height:.2f} re f",
+        f"1 1 1 rg {body_x + (font_size * 0.18):.2f} {body_y + (font_size * 0.16):.2f} {font_size * 0.24:.2f} {font_size * 0.16:.2f} re f",
+        f"1 1 1 rg {body_x + (font_size * 0.5):.2f} {body_y + (font_size * 0.16):.2f} {font_size * 0.24:.2f} {font_size * 0.16:.2f} re f",
+        f"1 1 1 rg {body_x + (font_size * 0.18):.2f} {body_y - (font_size * 0.12):.2f} {wheel_size:.2f} {wheel_size:.2f} re f",
+        f"1 1 1 rg {body_x + (width - font_size * 0.3):.2f} {body_y - (font_size * 0.12):.2f} {wheel_size:.2f} {wheel_size:.2f} re f",
+    ]
+
+
+def _pdf_drink_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    bowl_left = x + (font_size * 0.14)
+    bowl_bottom = y + (font_size * 0.18)
+    bowl_right = x + (width - font_size * 0.14)
+    stem_x = x + (width * 0.5)
+    stem_bottom = y - (font_size * 0.16)
+    return [
+        f"0.18 0.18 0.18 rg {stem_x - font_size * 0.03:.2f} {stem_bottom:.2f} {font_size * 0.06:.2f} {font_size * 0.3:.2f} re f",
+        f"0.18 0.18 0.18 rg {stem_x - font_size * 0.16:.2f} {stem_bottom - font_size * 0.06:.2f} {font_size * 0.32:.2f} {font_size * 0.06:.2f} re f",
+        f"0.18 0.18 0.18 rg {bowl_left:.2f} {bowl_bottom:.2f} {font_size * 0.08:.2f} {font_size * 0.08:.2f} re f",
+        f"0.18 0.18 0.18 rg {bowl_right - font_size * 0.08:.2f} {bowl_bottom:.2f} {font_size * 0.08:.2f} {font_size * 0.08:.2f} re f",
+        f"0.18 0.18 0.18 rg {x + width * 0.32:.2f} {y + font_size * 0.02:.2f} {font_size * 0.36:.2f} {font_size * 0.12:.2f} re f",
+        f"0.18 0.18 0.18 rg {x + width * 0.62:.2f} {y + font_size * 0.26:.2f} {font_size * 0.06:.2f} {font_size * 0.3:.2f} re f",
+    ]
+
+
+def _pdf_music_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    return [
+        f"0.18 0.18 0.18 rg {x + width * 0.46:.2f} {y + font_size * 0.02:.2f} {font_size * 0.08:.2f} {font_size * 0.56:.2f} re f",
+        f"0.18 0.18 0.18 rg {x + width * 0.54:.2f} {y + font_size * 0.48:.2f} {font_size * 0.28:.2f} {font_size * 0.08:.2f} re f",
+        f"0.18 0.18 0.18 rg {x + width * 0.18:.2f} {y - font_size * 0.02:.2f} {font_size * 0.18:.2f} {font_size * 0.18:.2f} re f",
+        f"0.18 0.18 0.18 rg {x + width * 0.58:.2f} {y + font_size * 0.1:.2f} {font_size * 0.18:.2f} {font_size * 0.18:.2f} re f",
+    ]
+
+
+def _pdf_money_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    body_x = x + (font_size * 0.04)
+    body_y = y - (font_size * 0.06)
+    body_h = font_size * 0.56
+    return [
+        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {width:.2f} {body_h:.2f} re f",
+        f"1 1 1 rg {body_x + font_size * 0.12:.2f} {body_y + font_size * 0.1:.2f} {width - font_size * 0.24:.2f} {body_h - font_size * 0.2:.2f} re f",
+        f"0.18 0.18 0.18 rg {body_x + width * 0.42:.2f} {body_y + body_h * 0.28:.2f} {font_size * 0.2:.2f} {font_size * 0.2:.2f} re f",
+    ]
+
+
+def _pdf_magnet_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    leg_w = font_size * 0.18
+    leg_h = font_size * 0.5
+    top_h = font_size * 0.14
+    base_y = y - (font_size * 0.08)
+    left_x = x + (font_size * 0.12)
+    right_x = x + width - leg_w - (font_size * 0.12)
+    return [
+        f"0.18 0.18 0.18 rg {left_x:.2f} {base_y:.2f} {leg_w:.2f} {leg_h:.2f} re f",
+        f"0.18 0.18 0.18 rg {right_x:.2f} {base_y:.2f} {leg_w:.2f} {leg_h:.2f} re f",
+        f"0.18 0.18 0.18 rg {left_x:.2f} {base_y + leg_h:.2f} {right_x - left_x + leg_w:.2f} {top_h:.2f} re f",
+        f"1 1 1 rg {left_x:.2f} {base_y:.2f} {leg_w:.2f} {font_size * 0.12:.2f} re f",
+        f"1 1 1 rg {right_x:.2f} {base_y:.2f} {leg_w:.2f} {font_size * 0.12:.2f} re f",
+    ]
+
+
+def _pdf_generic_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    size = font_size * 0.34
+    return [
+        f"0.18 0.18 0.18 rg {x + width * 0.18:.2f} {y + font_size * 0.04:.2f} {size:.2f} {size:.2f} re f",
+        f"0.18 0.18 0.18 rg {x + width * 0.48:.2f} {y + font_size * 0.22:.2f} {size:.2f} {size:.2f} re f",
+    ]
 
 
 def _escape_pdf_text(text: str) -> str:
