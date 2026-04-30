@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compile check (local)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "-m",
+        "compileall",
+        "-q",
+        "."
+      ],
+      "group": "build"
+    },
+    {
+      "label": "Deploy to production (cp04)",
+      "type": "shell",
+      "command": "ssh",
+      "args": [
+        "cp04.azehosting.net",
+        "cd ~/public_html/bingo; git pull --ff-only; /home/christi2/virtualenv/openclaw/3.9/bin/python -m compileall -q .; touch tmp/restart.txt"
+      ]
+    }
+  ]
+}
