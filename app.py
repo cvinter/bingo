@@ -15,6 +15,8 @@ GRID_SIZE = 5
 MIN_QUESTIONS = GRID_SIZE * GRID_SIZE
 MAX_PLATES = 100
 DEFAULT_PLATE_COUNT = 4
+PDF_CAMERA_MARK = "\ufff0"
+PDF_ICON_CHARS = {"\U0001f4f7", "\U0001f4f8"}
 SAMPLE_QUESTIONS = [
     "Synergy",
     "Let's take that offline",
@@ -402,7 +404,7 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
     commands = [
         "0.95 0.93 0.88 rg 32 72 531 698 re f",
         "0.47 0.40 0.30 RG 1 w",
-        _pdf_text(40, page_height - 52, "Bingo plate", 24),
+        _pdf_text_run(40, page_height - 52, "Bingo plate", 24),
     ]
 
     for row in range(GRID_SIZE):
@@ -421,7 +423,7 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
 
             for line_index, line in enumerate(lines):
                 line_y = first_line_y - (line_index * line_height)
-                commands.append(_pdf_text(x + 8, line_y, line, font_size))
+                commands.extend(_pdf_text_commands(x + 8, line_y, line, font_size))
 
     return "\n".join(commands).encode("cp1252", "replace")
 
@@ -442,6 +444,9 @@ def _sanitize_pdf_text(text: str) -> str:
     sanitized_parts: list[str] = []
 
     for char in text:
+        if char in PDF_ICON_CHARS:
+            sanitized_parts.append(PDF_CAMERA_MARK)
+            continue
         try:
             char.encode("cp1252")
         except UnicodeEncodeError:
@@ -466,16 +471,82 @@ def _pdf_fallback_for_char(char: str) -> str:
 
 
 def _estimate_pdf_text_width(text: str, font_size: float) -> float:
-    return len(text) * font_size * 0.48
+    width = 0.0
+    for char in text:
+        if char == PDF_CAMERA_MARK:
+            width += _pdf_icon_width(font_size)
+        else:
+            width += font_size * 0.48
+    return width
 
 
-def _pdf_text(x: float, y: float, text: str, font_size: float, color: tuple[float, float, float] = (0.16, 0.14, 0.11)) -> str:
+def _pdf_text_commands(
+    x: float,
+    y: float,
+    text: str,
+    font_size: float,
+    color: tuple[float, float, float] = (0.16, 0.14, 0.11),
+) -> list[str]:
+    commands: list[str] = []
+    cursor_x = x
+    text_buffer: list[str] = []
+
+    def flush_text() -> None:
+        nonlocal cursor_x
+        if not text_buffer:
+            return
+        chunk = "".join(text_buffer)
+        commands.append(_pdf_text_run(cursor_x, y, chunk, font_size, color=color))
+        cursor_x += _estimate_pdf_text_width(chunk, font_size)
+        text_buffer.clear()
+
+    for char in _sanitize_pdf_text(text):
+        if char == PDF_CAMERA_MARK:
+            flush_text()
+            commands.extend(_pdf_camera_icon_commands(cursor_x, y, font_size))
+            cursor_x += _pdf_icon_width(font_size)
+            continue
+        text_buffer.append(char)
+
+    flush_text()
+    return commands
+
+
+def _pdf_text_run(x: float, y: float, text: str, font_size: float, color: tuple[float, float, float] = (0.16, 0.14, 0.11)) -> str:
     escaped_text = _escape_pdf_text(_sanitize_pdf_text(text))
     red, green, blue = color
     return (
         f"BT {red:.2f} {green:.2f} {blue:.2f} rg /F1 {font_size:.2f} Tf 1 0 0 1 {x:.2f} {y:.2f} Tm "
         f"({escaped_text}) Tj ET"
     )
+
+
+def _pdf_icon_width(font_size: float) -> float:
+    return font_size * 1.2
+
+
+def _pdf_camera_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    height = font_size * 0.82
+    body_x = x + (font_size * 0.08)
+    body_y = y - (font_size * 0.18)
+    top_x = body_x + (width * 0.12)
+    top_y = body_y + height
+    top_width = width * 0.28
+    top_height = font_size * 0.16
+    lens_x = body_x + (width * 0.3)
+    lens_y = body_y + (height * 0.24)
+    lens_size = font_size * 0.34
+    flash_x = body_x + (width * 0.74)
+    flash_y = body_y + (height * 0.62)
+    flash_size = font_size * 0.08
+    commands = [
+        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {width:.2f} {height:.2f} re f",
+        f"0.18 0.18 0.18 rg {top_x:.2f} {top_y:.2f} {top_width:.2f} {top_height:.2f} re f",
+        f"1 1 1 rg {lens_x:.2f} {lens_y:.2f} {lens_size:.2f} {lens_size:.2f} re f",
+        f"1 1 1 rg {flash_x:.2f} {flash_y:.2f} {flash_size:.2f} {flash_size:.2f} re f",
+    ]
+    return commands
 
 
 def _escape_pdf_text(text: str) -> str:
