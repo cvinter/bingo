@@ -15,17 +15,17 @@ GRID_SIZE = 5
 MIN_QUESTIONS = GRID_SIZE * GRID_SIZE
 MAX_PLATES = 100
 DEFAULT_PLATE_COUNT = 22
-PDF_CAMERA_MARK = "\ufff0"
-PDF_VEHICLE_MARK = "\ufff1"
-PDF_DRINK_MARK = "\ufff2"
-PDF_MUSIC_MARK = "\ufff3"
-PDF_MONEY_MARK = "\ufff4"
-PDF_MAGNET_MARK = "\ufff5"
-PDF_TRANSIT_MARK = "\ufff6"
-PDF_SELFIE_MARK = "\ufff7"
-PDF_SCREEN_MARK = "\ufff8"
-PDF_SPORT_MARK = "\ufff9"
-PDF_GENERIC_MARK = "\ufffa"
+PDF_CAMERA_MARK = "\ue000"
+PDF_VEHICLE_MARK = "\ue001"
+PDF_DRINK_MARK = "\ue002"
+PDF_MUSIC_MARK = "\ue003"
+PDF_MONEY_MARK = "\ue004"
+PDF_MAGNET_MARK = "\ue005"
+PDF_TRANSIT_MARK = "\ue006"
+PDF_SELFIE_MARK = "\ue007"
+PDF_SCREEN_MARK = "\ue008"
+PDF_SPORT_MARK = "\ue009"
+PDF_GENERIC_MARK = "\ue00a"
 PDF_ICON_MARKERS = {
     PDF_CAMERA_MARK,
     PDF_VEHICLE_MARK,
@@ -38,6 +38,175 @@ PDF_ICON_MARKERS = {
     PDF_SCREEN_MARK,
     PDF_SPORT_MARK,
     PDF_GENERIC_MARK,
+}
+PDF_ICON_PATTERN_NAMES = {
+    PDF_CAMERA_MARK: "camera",
+    PDF_VEHICLE_MARK: "vehicle",
+    PDF_DRINK_MARK: "drink",
+    PDF_MUSIC_MARK: "music",
+    PDF_MONEY_MARK: "money",
+    PDF_MAGNET_MARK: "magnet",
+    PDF_TRANSIT_MARK: "transit",
+    PDF_SELFIE_MARK: "selfie",
+    PDF_SCREEN_MARK: "screen",
+    PDF_SPORT_MARK: "sport",
+    PDF_GENERIC_MARK: "generic",
+}
+PDF_ICON_PATTERNS = {
+    "camera": [
+        "................",
+        "....######......",
+        "..##########....",
+        ".############...",
+        ".##..####..##...",
+        ".##.######.##...",
+        ".##.######.##...",
+        ".##..####..##...",
+        ".############...",
+        "..##########....",
+        "....######......",
+        "................",
+    ],
+    "vehicle": [
+        "................",
+        "................",
+        "...##########...",
+        "..############..",
+        ".##############.",
+        ".##..######..##.",
+        "################",
+        "################",
+        "..##........##..",
+        ".####......####.",
+        ".####......####.",
+        "................",
+    ],
+    "drink": [
+        "................",
+        "..##........##..",
+        "...##......##...",
+        "....##....##....",
+        ".....######.....",
+        "......####......",
+        ".......##.......",
+        ".......##.......",
+        "......####......",
+        ".....######.....",
+        "................",
+        "................",
+    ],
+    "music": [
+        ".........###....",
+        ".........###....",
+        ".........###....",
+        ".........#####..",
+        ".........#####..",
+        "....###..###....",
+        "...#####.###....",
+        "...#####.###....",
+        "....###..###....",
+        "..........###...",
+        "................",
+        "................",
+    ],
+    "money": [
+        "................",
+        "..############..",
+        ".##############.",
+        ".##..........##.",
+        ".##..######..##.",
+        ".##..##..##..##.",
+        ".##..######..##.",
+        ".##..........##.",
+        ".##############.",
+        "..############..",
+        "................",
+        "................",
+    ],
+    "magnet": [
+        "....##....##....",
+        "...####..####...",
+        "...####..####...",
+        "...####..####...",
+        "...####..####...",
+        "...####..####...",
+        "...##########...",
+        "....########....",
+        ".....######.....",
+        "......####......",
+        "................",
+        "................",
+    ],
+    "transit": [
+        "................",
+        "...##########...",
+        "..############..",
+        "..##..##..##....",
+        "..##..##..##....",
+        "..############..",
+        "..############..",
+        "..############..",
+        "...##......##...",
+        "..####....####..",
+        "................",
+        "................",
+    ],
+    "selfie": [
+        ".....####.......",
+        "....######......",
+        "....######......",
+        "....######......",
+        "....######......",
+        "....######......",
+        ".....#######....",
+        ".......######...",
+        "........#####...",
+        ".........###....",
+        "................",
+        "................",
+    ],
+    "screen": [
+        "................",
+        ".##############.",
+        ".##..........##.",
+        ".##..######..##.",
+        ".##..#....#..##.",
+        ".##..######..##.",
+        ".##..........##.",
+        ".##############.",
+        ".....######.....",
+        "....########....",
+        "................",
+        "................",
+    ],
+    "sport": [
+        "................",
+        ".....######.....",
+        "....########....",
+        "...###.##.###...",
+        "...##.####.##...",
+        "...##.####.##...",
+        "...###.##.###...",
+        "....########....",
+        ".....######.....",
+        "................",
+        "................",
+        "................",
+    ],
+    "generic": [
+        "................",
+        "....###..###....",
+        "....###..###....",
+        "................",
+        "......####......",
+        ".....######.....",
+        ".....######.....",
+        "......####......",
+        "................",
+        "....###..###....",
+        "....###..###....",
+        "................",
+    ],
 }
 
 
@@ -360,9 +529,25 @@ def _render_document(title: str, script_name: str, body: str) -> str:
 def _build_pdf_document(boards: list[list[str]]) -> bytes:
     page_width = 595
     page_height = 842
+    icon_objects = _build_pdf_icon_objects()
     objects: list[bytes | None] = [None, None]
     page_object_ids: list[int] = []
-    font_object_id = 3 + (len(boards) * 2)
+    icon_object_ids: dict[str, int] = {}
+
+    for icon_name, icon_stream in icon_objects.items():
+        icon_object_ids[icon_name] = len(objects) + 1
+        objects.append(icon_stream)
+
+    font_object_id = len(objects) + 1
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>")
+
+    xobject_entries = " ".join(
+        f"/{_pdf_icon_resource_name(icon_name)} {object_id} 0 R"
+        for icon_name, object_id in icon_object_ids.items()
+    )
+    resources = (
+        f"<< /Font << /F1 {font_object_id} 0 R >> /XObject << {xobject_entries} >> >>"
+    ).encode("ascii")
 
     for board in boards:
         content_stream = _build_pdf_page_stream(board, page_height)
@@ -372,14 +557,13 @@ def _build_pdf_document(boards: list[list[str]]) -> bytes:
         page_object_ids.append(page_object_id)
         page_object = (
             f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {page_width} {page_height}] "
-            f"/Resources << /Font << /F1 {font_object_id} 0 R >> >> /Contents {content_object_id} 0 R >>"
+            f"/Resources {resources.decode('ascii')} /Contents {content_object_id} 0 R >>"
         ).encode("ascii")
         objects.append(page_object)
 
     page_refs = " ".join(f"{page_id} 0 R" for page_id in page_object_ids)
     objects[0] = b"<< /Type /Catalog /Pages 2 0 R >>"
     objects[1] = f"<< /Type /Pages /Kids [{page_refs}] /Count {len(page_object_ids)} >>".encode("ascii")
-    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>")
     return _assemble_pdf(objects)
 
 
@@ -432,6 +616,9 @@ def _sanitize_pdf_text(text: str) -> str:
     sanitized_parts: list[str] = []
 
     for char in text:
+        if char in PDF_ICON_MARKERS:
+            sanitized_parts.append(char)
+            continue
         icon_marker = _pdf_icon_marker_for_char(char)
         if icon_marker:
             sanitized_parts.append(icon_marker)
@@ -547,191 +734,47 @@ def _pdf_icon_width(font_size: float) -> float:
 
 
 def _pdf_icon_commands(x: float, y: float, font_size: float, marker: str) -> list[str]:
-    if marker == PDF_CAMERA_MARK:
-        return _pdf_camera_icon_commands(x, y, font_size)
-    if marker == PDF_TRANSIT_MARK:
-        return _pdf_transit_icon_commands(x, y, font_size)
-    if marker == PDF_SELFIE_MARK:
-        return _pdf_selfie_icon_commands(x, y, font_size)
-    if marker == PDF_SCREEN_MARK:
-        return _pdf_screen_icon_commands(x, y, font_size)
-    if marker == PDF_SPORT_MARK:
-        return _pdf_sport_icon_commands(x, y, font_size)
-    if marker == PDF_VEHICLE_MARK:
-        return _pdf_vehicle_icon_commands(x, y, font_size)
-    if marker == PDF_DRINK_MARK:
-        return _pdf_drink_icon_commands(x, y, font_size)
-    if marker == PDF_MUSIC_MARK:
-        return _pdf_music_icon_commands(x, y, font_size)
-    if marker == PDF_MONEY_MARK:
-        return _pdf_money_icon_commands(x, y, font_size)
-    if marker == PDF_MAGNET_MARK:
-        return _pdf_magnet_icon_commands(x, y, font_size)
-    return _pdf_generic_icon_commands(x, y, font_size)
-
-
-def _pdf_camera_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    icon_name = PDF_ICON_PATTERN_NAMES.get(marker, "generic")
     width = _pdf_icon_width(font_size)
-    height = font_size * 0.82
-    body_x = x + (font_size * 0.08)
-    body_y = y - (font_size * 0.18)
-    top_x = body_x + (width * 0.12)
-    top_y = body_y + height
-    top_width = width * 0.28
-    top_height = font_size * 0.16
-    lens_x = body_x + (width * 0.3)
-    lens_y = body_y + (height * 0.24)
-    lens_size = font_size * 0.34
-    flash_x = body_x + (width * 0.74)
-    flash_y = body_y + (height * 0.62)
-    flash_size = font_size * 0.08
-    commands = [
-        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {width:.2f} {height:.2f} re f",
-        f"0.18 0.18 0.18 rg {top_x:.2f} {top_y:.2f} {top_width:.2f} {top_height:.2f} re f",
-        f"1 1 1 rg {lens_x:.2f} {lens_y:.2f} {lens_size:.2f} {lens_size:.2f} re f",
-        f"1 1 1 rg {flash_x:.2f} {flash_y:.2f} {flash_size:.2f} {flash_size:.2f} re f",
-    ]
-    return commands
-
-
-def _pdf_vehicle_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    body_x = x + (font_size * 0.04)
-    body_y = y - (font_size * 0.12)
-    body_height = font_size * 0.52
-    roof_height = font_size * 0.18
-    wheel_size = font_size * 0.12
+    height = font_size * 0.9
+    icon_y = y - (font_size * 0.16)
+    resource_name = _pdf_icon_resource_name(icon_name)
     return [
-        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {width:.2f} {body_height:.2f} re f",
-        f"0.18 0.18 0.18 rg {body_x + (font_size * 0.16):.2f} {body_y + body_height:.2f} {width * 0.56:.2f} {roof_height:.2f} re f",
-        f"1 1 1 rg {body_x + (font_size * 0.18):.2f} {body_y + (font_size * 0.16):.2f} {font_size * 0.24:.2f} {font_size * 0.16:.2f} re f",
-        f"1 1 1 rg {body_x + (font_size * 0.5):.2f} {body_y + (font_size * 0.16):.2f} {font_size * 0.24:.2f} {font_size * 0.16:.2f} re f",
-        f"1 1 1 rg {body_x + (font_size * 0.18):.2f} {body_y - (font_size * 0.12):.2f} {wheel_size:.2f} {wheel_size:.2f} re f",
-        f"1 1 1 rg {body_x + (width - font_size * 0.3):.2f} {body_y - (font_size * 0.12):.2f} {wheel_size:.2f} {wheel_size:.2f} re f",
+        f"q 0.18 0.18 0.18 rg {width:.2f} 0 0 {height:.2f} {x:.2f} {icon_y:.2f} cm /{resource_name} Do Q"
     ]
 
 
-def _pdf_transit_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    body_x = x + (font_size * 0.12)
-    body_y = y - (font_size * 0.1)
-    body_w = width - (font_size * 0.24)
-    body_h = font_size * 0.62
-    wheel = font_size * 0.1
-    return [
-        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {body_w:.2f} {body_h:.2f} re f",
-        f"1 1 1 rg {body_x + font_size * 0.12:.2f} {body_y + font_size * 0.28:.2f} {font_size * 0.18:.2f} {font_size * 0.14:.2f} re f",
-        f"1 1 1 rg {body_x + font_size * 0.34:.2f} {body_y + font_size * 0.28:.2f} {font_size * 0.18:.2f} {font_size * 0.14:.2f} re f",
-        f"1 1 1 rg {body_x + font_size * 0.56:.2f} {body_y + font_size * 0.28:.2f} {font_size * 0.18:.2f} {font_size * 0.14:.2f} re f",
-        f"1 1 1 rg {body_x + font_size * 0.16:.2f} {body_y - font_size * 0.1:.2f} {wheel:.2f} {wheel:.2f} re f",
-        f"1 1 1 rg {body_x + body_w - font_size * 0.26:.2f} {body_y - font_size * 0.1:.2f} {wheel:.2f} {wheel:.2f} re f",
-    ]
+def _build_pdf_icon_objects() -> dict[str, bytes]:
+    return {name: _pdf_image_object_from_pattern(pattern) for name, pattern in PDF_ICON_PATTERNS.items()}
 
 
-def _pdf_selfie_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    phone_x = x + (font_size * 0.18)
-    phone_y = y - (font_size * 0.14)
-    phone_w = font_size * 0.36
-    phone_h = font_size * 0.66
-    stick_x = phone_x + phone_w
-    stick_y = phone_y + font_size * 0.1
-    return [
-        f"0.18 0.18 0.18 rg {phone_x:.2f} {phone_y:.2f} {phone_w:.2f} {phone_h:.2f} re f",
-        f"1 1 1 rg {phone_x + font_size * 0.06:.2f} {phone_y + font_size * 0.1:.2f} {phone_w - font_size * 0.12:.2f} {phone_h - font_size * 0.2:.2f} re f",
-        f"0.18 0.18 0.18 rg {stick_x:.2f} {stick_y:.2f} {font_size * 0.08:.2f} {font_size * 0.46:.2f} re f",
-        f"0.18 0.18 0.18 rg {stick_x + font_size * 0.08:.2f} {stick_y + font_size * 0.34:.2f} {font_size * 0.18:.2f} {font_size * 0.08:.2f} re f",
-    ]
+def _pdf_icon_resource_name(icon_name: str) -> str:
+    return f"I{icon_name.title()}"
 
 
-def _pdf_screen_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    screen_x = x + (font_size * 0.08)
-    screen_y = y - (font_size * 0.08)
-    screen_w = width - (font_size * 0.16)
-    screen_h = font_size * 0.5
-    return [
-        f"0.18 0.18 0.18 rg {screen_x:.2f} {screen_y:.2f} {screen_w:.2f} {screen_h:.2f} re f",
-        f"1 1 1 rg {screen_x + font_size * 0.08:.2f} {screen_y + font_size * 0.08:.2f} {screen_w - font_size * 0.16:.2f} {screen_h - font_size * 0.16:.2f} re f",
-        f"0.18 0.18 0.18 rg {screen_x + screen_w * 0.36:.2f} {screen_y - font_size * 0.12:.2f} {font_size * 0.16:.2f} {font_size * 0.12:.2f} re f",
-        f"0.18 0.18 0.18 rg {screen_x + screen_w * 0.22:.2f} {screen_y - font_size * 0.18:.2f} {font_size * 0.44:.2f} {font_size * 0.06:.2f} re f",
-    ]
+def _pdf_image_object_from_pattern(pattern: list[str]) -> bytes:
+    height = len(pattern)
+    width = len(pattern[0]) if pattern else 0
+    rows = [_pdf_pack_pattern_row(row) for row in pattern]
+    data = b"".join(rows)
+    dictionary = (
+        f"<< /Type /XObject /Subtype /Image /Width {width} /Height {height} "
+        f"/ImageMask true /BitsPerComponent 1 /Length {len(data)} >>\nstream\n"
+    ).encode("ascii")
+    return dictionary + data + b"\nendstream"
 
 
-def _pdf_sport_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    ball_x = x + (width * 0.24)
-    ball_y = y - (font_size * 0.02)
-    ball = font_size * 0.44
-    return [
-        f"0.18 0.18 0.18 rg {ball_x:.2f} {ball_y:.2f} {ball:.2f} {ball:.2f} re f",
-        f"1 1 1 rg {ball_x + font_size * 0.12:.2f} {ball_y + font_size * 0.12:.2f} {font_size * 0.1:.2f} {font_size * 0.1:.2f} re f",
-    ]
-
-
-def _pdf_drink_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    bowl_left = x + (font_size * 0.14)
-    bowl_bottom = y + (font_size * 0.18)
-    bowl_right = x + (width - font_size * 0.14)
-    stem_x = x + (width * 0.5)
-    stem_bottom = y - (font_size * 0.16)
-    return [
-        f"0.18 0.18 0.18 rg {stem_x - font_size * 0.03:.2f} {stem_bottom:.2f} {font_size * 0.06:.2f} {font_size * 0.3:.2f} re f",
-        f"0.18 0.18 0.18 rg {stem_x - font_size * 0.16:.2f} {stem_bottom - font_size * 0.06:.2f} {font_size * 0.32:.2f} {font_size * 0.06:.2f} re f",
-        f"0.18 0.18 0.18 rg {bowl_left:.2f} {bowl_bottom:.2f} {font_size * 0.08:.2f} {font_size * 0.08:.2f} re f",
-        f"0.18 0.18 0.18 rg {bowl_right - font_size * 0.08:.2f} {bowl_bottom:.2f} {font_size * 0.08:.2f} {font_size * 0.08:.2f} re f",
-        f"0.18 0.18 0.18 rg {x + width * 0.32:.2f} {y + font_size * 0.02:.2f} {font_size * 0.36:.2f} {font_size * 0.12:.2f} re f",
-        f"0.18 0.18 0.18 rg {x + width * 0.62:.2f} {y + font_size * 0.26:.2f} {font_size * 0.06:.2f} {font_size * 0.3:.2f} re f",
-    ]
-
-
-def _pdf_music_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    return [
-        f"0.18 0.18 0.18 rg {x + width * 0.46:.2f} {y + font_size * 0.02:.2f} {font_size * 0.08:.2f} {font_size * 0.56:.2f} re f",
-        f"0.18 0.18 0.18 rg {x + width * 0.54:.2f} {y + font_size * 0.48:.2f} {font_size * 0.28:.2f} {font_size * 0.08:.2f} re f",
-        f"0.18 0.18 0.18 rg {x + width * 0.18:.2f} {y - font_size * 0.02:.2f} {font_size * 0.18:.2f} {font_size * 0.18:.2f} re f",
-        f"0.18 0.18 0.18 rg {x + width * 0.58:.2f} {y + font_size * 0.1:.2f} {font_size * 0.18:.2f} {font_size * 0.18:.2f} re f",
-    ]
-
-
-def _pdf_money_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    body_x = x + (font_size * 0.04)
-    body_y = y - (font_size * 0.06)
-    body_h = font_size * 0.56
-    return [
-        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {width:.2f} {body_h:.2f} re f",
-        f"1 1 1 rg {body_x + font_size * 0.12:.2f} {body_y + font_size * 0.1:.2f} {width - font_size * 0.24:.2f} {body_h - font_size * 0.2:.2f} re f",
-        f"0.18 0.18 0.18 rg {body_x + width * 0.42:.2f} {body_y + body_h * 0.28:.2f} {font_size * 0.2:.2f} {font_size * 0.2:.2f} re f",
-    ]
-
-
-def _pdf_magnet_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    leg_w = font_size * 0.18
-    leg_h = font_size * 0.5
-    top_h = font_size * 0.14
-    base_y = y - (font_size * 0.08)
-    left_x = x + (font_size * 0.12)
-    right_x = x + width - leg_w - (font_size * 0.12)
-    return [
-        f"0.18 0.18 0.18 rg {left_x:.2f} {base_y:.2f} {leg_w:.2f} {leg_h:.2f} re f",
-        f"0.18 0.18 0.18 rg {right_x:.2f} {base_y:.2f} {leg_w:.2f} {leg_h:.2f} re f",
-        f"0.18 0.18 0.18 rg {left_x:.2f} {base_y + leg_h:.2f} {right_x - left_x + leg_w:.2f} {top_h:.2f} re f",
-        f"1 1 1 rg {left_x:.2f} {base_y:.2f} {leg_w:.2f} {font_size * 0.12:.2f} re f",
-        f"1 1 1 rg {right_x:.2f} {base_y:.2f} {leg_w:.2f} {font_size * 0.12:.2f} re f",
-    ]
-
-
-def _pdf_generic_icon_commands(x: float, y: float, font_size: float) -> list[str]:
-    width = _pdf_icon_width(font_size)
-    size = font_size * 0.34
-    return [
-        f"0.18 0.18 0.18 rg {x + width * 0.18:.2f} {y + font_size * 0.04:.2f} {size:.2f} {size:.2f} re f",
-        f"0.18 0.18 0.18 rg {x + width * 0.48:.2f} {y + font_size * 0.22:.2f} {size:.2f} {size:.2f} re f",
-    ]
+def _pdf_pack_pattern_row(row: str) -> bytes:
+    padded_row = row + ("." * ((8 - (len(row) % 8)) % 8))
+    packed = bytearray()
+    for start in range(0, len(padded_row), 8):
+        chunk = padded_row[start : start + 8]
+        value = 0
+        for bit_index, char in enumerate(chunk):
+            if char == "#":
+                value |= 1 << (7 - bit_index)
+        packed.append(value)
+    return bytes(packed)
 
 
 def _escape_pdf_text(text: str) -> str:
