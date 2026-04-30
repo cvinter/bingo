@@ -157,7 +157,6 @@ def _join_base(script_name: str, path: str) -> str:
 
 def _render_homepage(script_name: str) -> str:
     api_url = _join_base(script_name, "/api/card")
-    css_url = _join_base(script_name, "/static/site.css")
     js_url = _join_base(script_name, "/static/site.js")
     initial_payload = json.dumps(_build_card("bingo"), ensure_ascii=False).replace("<", "\\u003c")
 
@@ -199,7 +198,6 @@ def _render_homepage(script_name: str) -> str:
         '</div>'
         '</section>'
         f'<script id="app-config" type="application/json">{{"apiUrl": "{api_url}", "initialCard": {initial_payload}}}</script>'
-        f'<link rel="stylesheet" href="{css_url}">'
         f'<script src="{js_url}" defer></script>'
         '</main>'
     )
@@ -208,6 +206,7 @@ def _render_homepage(script_name: str) -> str:
 
 def _render_document(title: str, script_name: str, body: str) -> str:
     home_url = _join_base(script_name, "/")
+    css_url = _join_base(script_name, "/static/site.css")
     return (
         '<!doctype html>'
         '<html lang="en">'
@@ -216,6 +215,7 @@ def _render_document(title: str, script_name: str, body: str) -> str:
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f'<title>{title} | Bingo</title>'
         '<meta name="description" content="A lightweight Bingo web app deployed under /bingo.">'
+        f'<link rel="stylesheet" href="{css_url}">'
         '</head>'
         '<body>'
         '<div class="page-backdrop"></div>'
