@@ -16,7 +16,6 @@ MIN_QUESTIONS = GRID_SIZE * GRID_SIZE
 MAX_PLATES = 100
 DEFAULT_PLATE_COUNT = 22
 PDF_CAMERA_MARK = "\ufff0"
-PDF_ICON_CHARS = {"\U0001f4f7", "\U0001f4f8"}
 
 
 def application(environ, start_response):
@@ -410,7 +409,7 @@ def _sanitize_pdf_text(text: str) -> str:
     sanitized_parts: list[str] = []
 
     for char in text:
-        if char in PDF_ICON_CHARS:
+        if _is_pdf_camera_char(char):
             sanitized_parts.append(PDF_CAMERA_MARK)
             continue
         try:
@@ -423,6 +422,11 @@ def _sanitize_pdf_text(text: str) -> str:
             sanitized_parts.append(char)
 
     return "".join(sanitized_parts)
+
+
+def _is_pdf_camera_char(char: str) -> bool:
+    name = unicodedata.name(char, "")
+    return "CAMERA" in name
 
 
 def _pdf_fallback_for_char(char: str) -> str:
