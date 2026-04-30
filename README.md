@@ -1,14 +1,14 @@
 # bingo
 
-A small Python WSGI web app for christianvinter.dk/bingo. It serves a styled technical bingo board, supports deterministic board generation from a seed, and is set up for Passenger on Azehosting.
+A small Python WSGI web app for christianvinter.dk/bingo. It accepts one bingo prompt per line, generates any number of unique 5x5 plates with a free center square, previews them in the browser, and exports the generated set as a PDF.
 
 ## Project structure
 
-- `app.py`: WSGI application, HTML rendering, and JSON card API.
+- `app.py`: WSGI application, HTML rendering, board generation API, and PDF export.
 - `passenger_wsgi.py`: Passenger entrypoint.
 - `.htaccess`: Passenger configuration for the `/bingo` mount.
-- `static/site.css`: visual design for the page and board.
-- `static/site.js`: client-side board rendering, seed generation, and local state.
+- `static/site.css`: visual design for the builder and printable plate preview.
+- `static/site.js`: client-side generation flow and PDF download.
 - `.github/copilot-instructions.md`: project-specific instructions for hosting and deploy flow.
 - `.vscode/tasks.json`: local compile check and production deploy tasks.
 
@@ -25,6 +25,12 @@ Then open `http://127.0.0.1:8000`.
 ```powershell
 python -m compileall -q .
 ```
+
+## Usage notes
+
+- Enter at least 24 unique lines.
+- The app removes duplicate lines case-insensitively.
+- PDF export reuses the same generated set currently shown in the preview.
 
 ## Deploy target
 
@@ -43,16 +49,4 @@ cd /home/christi2/public_html/bingo
 git pull --ff-only
 /home/christi2/virtualenv/openclaw/3.9/bin/python -m compileall -q .
 touch tmp/restart.txt
-```
-
-## GitHub
-
-Create the repository as `bingo` on GitHub, then connect the local repo and push:
-
-```powershell
-git init -b main
-git remote add origin https://github.com/<your-user>/bingo.git
-git add .
-git commit -m "Initial scaffold"
-git push -u origin main
 ```
