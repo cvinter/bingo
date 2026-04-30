@@ -574,8 +574,8 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
     cell_height = 110
     grid_top = page_height - 120
     commands = [
-        "0.95 0.93 0.88 rg 32 72 531 698 re f",
-        "0.47 0.40 0.30 RG 1 w",
+        "1 1 1 rg 32 72 531 698 re f",
+        "0 0 0 RG 1 w",
     ]
 
     for row in range(GRID_SIZE):
@@ -584,7 +584,7 @@ def _build_pdf_page_stream(board: list[str], page_height: int) -> bytes:
             x = margin_x + (col * cell_width)
             y = grid_top - ((row + 1) * cell_height)
             label = board[index]
-            commands.append(f"0.47 0.40 0.30 RG {x:.2f} {y:.2f} {cell_width:.2f} {cell_height:.2f} re S")
+            commands.append(f"0 0 0 RG {x:.2f} {y:.2f} {cell_width:.2f} {cell_height:.2f} re S")
 
             font_size = 9.5
             lines = _wrap_pdf_text(label, max_width=cell_width - 16, font_size=font_size)
@@ -738,7 +738,7 @@ def _pdf_text_commands(
     y: float,
     text: str,
     font_size: float,
-    color: tuple[float, float, float] = (0.16, 0.14, 0.11),
+    color: tuple[float, float, float] = (0, 0, 0),
 ) -> list[str]:
     commands: list[str] = []
     cursor_x = x
@@ -765,7 +765,7 @@ def _pdf_text_commands(
     return commands
 
 
-def _pdf_text_run(x: float, y: float, text: str, font_size: float, color: tuple[float, float, float] = (0.16, 0.14, 0.11)) -> str:
+def _pdf_text_run(x: float, y: float, text: str, font_size: float, color: tuple[float, float, float] = (0, 0, 0)) -> str:
     escaped_text = _escape_pdf_text(_sanitize_pdf_text(text))
     red, green, blue = color
     return (
