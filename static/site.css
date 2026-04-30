@@ -1,14 +1,14 @@
 :root {
-  --bg: #f4ead9;
-  --bg-ink: #201710;
-  --panel: rgba(255, 249, 240, 0.82);
-  --panel-strong: #fffaf1;
-  --line: rgba(40, 28, 18, 0.14);
-  --accent: #0f6c5c;
-  --accent-strong: #084c41;
-  --accent-warm: #d95d39;
-  --muted: #6e6051;
-  --shadow: 0 24px 70px rgba(79, 54, 12, 0.15);
+  --bg: #ffffff;
+  --bg-ink: #000000;
+  --panel: rgba(255, 255, 255, 0.96);
+  --panel-strong: #ffffff;
+  --line: rgba(0, 0, 0, 0.14);
+  --accent: #000000;
+  --accent-strong: #000000;
+  --accent-warm: #000000;
+  --muted: #444444;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
   --radius-xl: 30px;
   --radius-lg: 22px;
   --radius-md: 16px;
@@ -29,10 +29,7 @@ body {
   min-height: 100vh;
   color: var(--bg-ink);
   font-family: var(--body);
-  background:
-    radial-gradient(circle at top left, rgba(217, 93, 57, 0.2), transparent 34%),
-    radial-gradient(circle at top right, rgba(15, 108, 92, 0.19), transparent 28%),
-    linear-gradient(180deg, #fbf5e8 0%, var(--bg) 55%, #ead7b4 100%);
+  background: var(--bg);
 }
 
 button,
@@ -56,13 +53,13 @@ textarea {
 .page-backdrop::before {
   top: -8rem;
   right: -7rem;
-  background: rgba(217, 93, 57, 0.22);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .page-backdrop::after {
   left: -10rem;
   bottom: 7rem;
-  background: rgba(15, 108, 92, 0.18);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .site-header,
@@ -89,7 +86,7 @@ textarea {
   padding: 1rem 1.25rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 249, 240, 0.7);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(14px);
 }
 
@@ -109,7 +106,7 @@ textarea {
   padding: 0 0.75rem;
   border-radius: 0.9rem;
   background: var(--accent);
-  color: #fff8ef;
+  color: #ffffff;
   font: 700 1rem/1 var(--display);
   letter-spacing: 0.1em;
 }
@@ -162,7 +159,7 @@ textarea {
 
 .hero__copy {
   padding: 2rem;
-  background: linear-gradient(145deg, rgba(255, 250, 243, 0.92), rgba(249, 229, 188, 0.82));
+  background: var(--panel-strong);
 }
 
 .eyebrow {
@@ -225,8 +222,8 @@ h2 {
 .field--stack textarea,
 .field--compact input {
   width: 100%;
-  border: 1px solid rgba(40, 28, 18, 0.16);
-  background: rgba(255, 252, 246, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: #ffffff;
   color: inherit;
 }
 
