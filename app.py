@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import mimetypes
 import textwrap
+import unicodedata
 from html import escape
 from pathlib import Path
 from random import Random
@@ -438,7 +439,30 @@ def _wrap_pdf_text(text: str, max_width: float, font_size: float) -> list[str]:
 
 
 def _sanitize_pdf_text(text: str) -> str:
-    return text.encode("cp1252", "replace").decode("cp1252")
+    sanitized_parts: list[str] = []
+
+    for char in text:
+        try:
+            char.encode("cp1252")
+        except UnicodeEncodeError:
+            replacement = _pdf_fallback_for_char(char)
+            if replacement:
+                sanitized_parts.append(replacement)
+        else:
+            sanitized_parts.append(char)
+
+    return "".join(sanitized_parts)
+
+
+def _pdf_fallback_for_char(char: str) -> str:
+    if char in {"\ufe0f", "\u200d"}:
+        return ""
+
+    name = unicodedata.name(char, "")
+    if not name:
+        return "[symbol]"
+
+    return f"[{name.lower()}]"
 
 
 def _estimate_pdf_text_width(text: str, font_size: float) -> float:
