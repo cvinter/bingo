@@ -21,7 +21,11 @@ PDF_DRINK_MARK = "\ufff2"
 PDF_MUSIC_MARK = "\ufff3"
 PDF_MONEY_MARK = "\ufff4"
 PDF_MAGNET_MARK = "\ufff5"
-PDF_GENERIC_MARK = "\ufff6"
+PDF_TRANSIT_MARK = "\ufff6"
+PDF_SELFIE_MARK = "\ufff7"
+PDF_SCREEN_MARK = "\ufff8"
+PDF_SPORT_MARK = "\ufff9"
+PDF_GENERIC_MARK = "\ufffa"
 PDF_ICON_MARKERS = {
     PDF_CAMERA_MARK,
     PDF_VEHICLE_MARK,
@@ -29,6 +33,10 @@ PDF_ICON_MARKERS = {
     PDF_MUSIC_MARK,
     PDF_MONEY_MARK,
     PDF_MAGNET_MARK,
+    PDF_TRANSIT_MARK,
+    PDF_SELFIE_MARK,
+    PDF_SCREEN_MARK,
+    PDF_SPORT_MARK,
     PDF_GENERIC_MARK,
 }
 
@@ -449,6 +457,14 @@ def _pdf_icon_marker_for_char(char: str) -> str:
         return PDF_GENERIC_MARK
     if "CAMERA" in name:
         return PDF_CAMERA_MARK
+    if any(keyword in name for keyword in ("METRO", "TRAIN", "RAILWAY", "LOCOMOTIVE", "SUBWAY")):
+        return PDF_TRANSIT_MARK
+    if any(keyword in name for keyword in ("SELFIE", "MOBILE PHONE", "PHONE", "TELEPHONE", "CALLING")):
+        return PDF_SELFIE_MARK
+    if any(keyword in name for keyword in ("TELEVISION", "PICTURE", "FRAME", "PHOTO", "SCREEN", "MONITOR", "TV")):
+        return PDF_SCREEN_MARK
+    if any(keyword in name for keyword in ("SOCCER", "FOOTBALL", "BALL", "SPORT")):
+        return PDF_SPORT_MARK
     if any(keyword in name for keyword in ("BUS", "CAR", "AUTOMOBILE", "TRUCK", "TAXI", "TRAM", "BICYCLE", "MOTOR")):
         return PDF_VEHICLE_MARK
     if any(keyword in name for keyword in ("DRINK", "COCKTAIL", "BEER", "WINE", "BOTTLE", "GLASS", "TUMBLER", "CUP")):
@@ -533,6 +549,14 @@ def _pdf_icon_width(font_size: float) -> float:
 def _pdf_icon_commands(x: float, y: float, font_size: float, marker: str) -> list[str]:
     if marker == PDF_CAMERA_MARK:
         return _pdf_camera_icon_commands(x, y, font_size)
+    if marker == PDF_TRANSIT_MARK:
+        return _pdf_transit_icon_commands(x, y, font_size)
+    if marker == PDF_SELFIE_MARK:
+        return _pdf_selfie_icon_commands(x, y, font_size)
+    if marker == PDF_SCREEN_MARK:
+        return _pdf_screen_icon_commands(x, y, font_size)
+    if marker == PDF_SPORT_MARK:
+        return _pdf_sport_icon_commands(x, y, font_size)
     if marker == PDF_VEHICLE_MARK:
         return _pdf_vehicle_icon_commands(x, y, font_size)
     if marker == PDF_DRINK_MARK:
@@ -584,6 +608,64 @@ def _pdf_vehicle_icon_commands(x: float, y: float, font_size: float) -> list[str
         f"1 1 1 rg {body_x + (font_size * 0.5):.2f} {body_y + (font_size * 0.16):.2f} {font_size * 0.24:.2f} {font_size * 0.16:.2f} re f",
         f"1 1 1 rg {body_x + (font_size * 0.18):.2f} {body_y - (font_size * 0.12):.2f} {wheel_size:.2f} {wheel_size:.2f} re f",
         f"1 1 1 rg {body_x + (width - font_size * 0.3):.2f} {body_y - (font_size * 0.12):.2f} {wheel_size:.2f} {wheel_size:.2f} re f",
+    ]
+
+
+def _pdf_transit_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    body_x = x + (font_size * 0.12)
+    body_y = y - (font_size * 0.1)
+    body_w = width - (font_size * 0.24)
+    body_h = font_size * 0.62
+    wheel = font_size * 0.1
+    return [
+        f"0.18 0.18 0.18 rg {body_x:.2f} {body_y:.2f} {body_w:.2f} {body_h:.2f} re f",
+        f"1 1 1 rg {body_x + font_size * 0.12:.2f} {body_y + font_size * 0.28:.2f} {font_size * 0.18:.2f} {font_size * 0.14:.2f} re f",
+        f"1 1 1 rg {body_x + font_size * 0.34:.2f} {body_y + font_size * 0.28:.2f} {font_size * 0.18:.2f} {font_size * 0.14:.2f} re f",
+        f"1 1 1 rg {body_x + font_size * 0.56:.2f} {body_y + font_size * 0.28:.2f} {font_size * 0.18:.2f} {font_size * 0.14:.2f} re f",
+        f"1 1 1 rg {body_x + font_size * 0.16:.2f} {body_y - font_size * 0.1:.2f} {wheel:.2f} {wheel:.2f} re f",
+        f"1 1 1 rg {body_x + body_w - font_size * 0.26:.2f} {body_y - font_size * 0.1:.2f} {wheel:.2f} {wheel:.2f} re f",
+    ]
+
+
+def _pdf_selfie_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    phone_x = x + (font_size * 0.18)
+    phone_y = y - (font_size * 0.14)
+    phone_w = font_size * 0.36
+    phone_h = font_size * 0.66
+    stick_x = phone_x + phone_w
+    stick_y = phone_y + font_size * 0.1
+    return [
+        f"0.18 0.18 0.18 rg {phone_x:.2f} {phone_y:.2f} {phone_w:.2f} {phone_h:.2f} re f",
+        f"1 1 1 rg {phone_x + font_size * 0.06:.2f} {phone_y + font_size * 0.1:.2f} {phone_w - font_size * 0.12:.2f} {phone_h - font_size * 0.2:.2f} re f",
+        f"0.18 0.18 0.18 rg {stick_x:.2f} {stick_y:.2f} {font_size * 0.08:.2f} {font_size * 0.46:.2f} re f",
+        f"0.18 0.18 0.18 rg {stick_x + font_size * 0.08:.2f} {stick_y + font_size * 0.34:.2f} {font_size * 0.18:.2f} {font_size * 0.08:.2f} re f",
+    ]
+
+
+def _pdf_screen_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    screen_x = x + (font_size * 0.08)
+    screen_y = y - (font_size * 0.08)
+    screen_w = width - (font_size * 0.16)
+    screen_h = font_size * 0.5
+    return [
+        f"0.18 0.18 0.18 rg {screen_x:.2f} {screen_y:.2f} {screen_w:.2f} {screen_h:.2f} re f",
+        f"1 1 1 rg {screen_x + font_size * 0.08:.2f} {screen_y + font_size * 0.08:.2f} {screen_w - font_size * 0.16:.2f} {screen_h - font_size * 0.16:.2f} re f",
+        f"0.18 0.18 0.18 rg {screen_x + screen_w * 0.36:.2f} {screen_y - font_size * 0.12:.2f} {font_size * 0.16:.2f} {font_size * 0.12:.2f} re f",
+        f"0.18 0.18 0.18 rg {screen_x + screen_w * 0.22:.2f} {screen_y - font_size * 0.18:.2f} {font_size * 0.44:.2f} {font_size * 0.06:.2f} re f",
+    ]
+
+
+def _pdf_sport_icon_commands(x: float, y: float, font_size: float) -> list[str]:
+    width = _pdf_icon_width(font_size)
+    ball_x = x + (width * 0.24)
+    ball_y = y - (font_size * 0.02)
+    ball = font_size * 0.44
+    return [
+        f"0.18 0.18 0.18 rg {ball_x:.2f} {ball_y:.2f} {ball:.2f} {ball:.2f} re f",
+        f"1 1 1 rg {ball_x + font_size * 0.12:.2f} {ball_y + font_size * 0.12:.2f} {font_size * 0.1:.2f} {font_size * 0.1:.2f} re f",
     ]
 
 
