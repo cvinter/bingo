@@ -1,6 +1,6 @@
 # bingo
 
-A small Python WSGI web app for christianvinter.dk/bingo. It accepts one bingo prompt per line, generates any number of unique 5x5 plates with a free center square, previews them in the browser, and exports the generated set as a PDF.
+A small Python WSGI web app for christianvinter.dk/bingo. It accepts one bingo prompt per line, generates any number of unique 5x5 plates, previews them in the browser, and exports the generated set as a PDF.
 
 ## Project structure
 
@@ -29,6 +29,7 @@ python -m compileall -q .
 ## Usage notes
 
 - Enter at least 25 unique lines.
+- The page starts with an empty question list and a default plate count of 22.
 - The app removes duplicate lines case-insensitively.
 - PDF export reuses the same generated set currently shown in the preview.
 

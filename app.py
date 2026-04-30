@@ -14,43 +14,9 @@ STATIC_DIR = ROOT / "static"
 GRID_SIZE = 5
 MIN_QUESTIONS = GRID_SIZE * GRID_SIZE
 MAX_PLATES = 100
-DEFAULT_PLATE_COUNT = 4
+DEFAULT_PLATE_COUNT = 22
 PDF_CAMERA_MARK = "\ufff0"
 PDF_ICON_CHARS = {"\U0001f4f7", "\U0001f4f8"}
-SAMPLE_QUESTIONS = [
-    "Synergy",
-    "Let's take that offline",
-    "Action items",
-    "Circle back",
-    "Low-hanging fruit",
-    "Bandwidth",
-    "Quick win",
-    "Move the needle",
-    "Parking lot",
-    "Deep dive",
-    "Boil the ocean",
-    "Customer journey",
-    "Best practice",
-    "Roadmap",
-    "North star",
-    "Single source of truth",
-    "Scalable",
-    "MVP",
-    "Thought leader",
-    "Alignment",
-    "Touch base",
-    "Game changer",
-    "Value add",
-    "Blocker",
-    "Next steps",
-    "Granular",
-    "Leverage",
-    "Peel the onion",
-    "Data-driven",
-    "Optimize",
-    "Stakeholder",
-    "Deliverable",
-]
 
 
 def application(environ, start_response):
@@ -268,20 +234,15 @@ def _render_homepage(script_name: str) -> str:
     boards_url = _join_base(script_name, "/api/boards")
     pdf_url = _join_base(script_name, "/api/export.pdf")
     js_url = _join_base(script_name, "/static/site.js")
-    sample_questions_text = "\n".join(SAMPLE_QUESTIONS)
-    initial_payload = _build_generation_payload(
-        {
-            "questionsText": sample_questions_text,
-            "count": DEFAULT_PLATE_COUNT,
-            "generationSeed": "sample-preview",
-        }
-    )
     config = {
         "boardsUrl": boards_url,
         "pdfUrl": pdf_url,
-        "sampleQuestionsText": sample_questions_text,
         "defaultCount": DEFAULT_PLATE_COUNT,
-        "initialPayload": initial_payload,
+        "initialPayload": {
+            "generationSeed": "",
+            "boards": [],
+            "questionCount": 0,
+        },
     }
     config_json = json.dumps(config, ensure_ascii=False).replace("<", "\\u003c")
 
@@ -296,7 +257,7 @@ def _render_homepage(script_name: str) -> str:
             '<form id="plate-form" class="composer" autocomplete="off">',
             '<label class="field field--stack" for="questions-input">',
             '<span>Questions, one per line</span>',
-            f'<textarea id="questions-input" name="questions" rows="14" spellcheck="false">{escape(sample_questions_text)}</textarea>',
+            '<textarea id="questions-input" name="questions" rows="14" spellcheck="false"></textarea>',
             '</label>',
             '<div class="composer__row">',
             '<label class="field field--compact" for="count-input">',
@@ -305,7 +266,6 @@ def _render_homepage(script_name: str) -> str:
             '</label>',
             '<div class="composer__actions">',
             '<button class="button button--primary" type="submit">Generate plates</button>',
-            '<button id="sample-button" class="button button--ghost" type="button">Load sample list</button>',
             '<button id="download-button" class="button button--ghost" type="button">Download PDF</button>',
             '</div>',
             '</div>',
@@ -314,8 +274,8 @@ def _render_homepage(script_name: str) -> str:
             '</div>',
             '<aside class="panel panel--glass stat-panel">',
             '<p class="stat-panel__label">Current set</p>',
-            '<p id="plate-summary" class="stat-panel__value">4 plates</p>',
-            '<p id="question-summary" class="stat-panel__meta">32 unique questions available</p>',
+            '<p id="plate-summary" class="stat-panel__value">0 plates</p>',
+            '<p id="question-summary" class="stat-panel__meta">0 unique questions available</p>',
             '<p class="stat-panel__hint">Each plate uses 25 of your questions. Add more lines if you want more variation across the set.</p>',
             '</aside>',
             '</section>',

@@ -9,11 +9,10 @@ if (configNode) {
   const plateSummary = document.getElementById("plate-summary");
   const questionSummary = document.getElementById("question-summary");
   const errorNode = document.getElementById("form-error");
-  const sampleButton = document.getElementById("sample-button");
   const downloadButton = document.getElementById("download-button");
 
   const state = {
-    questionsText: config.sampleQuestionsText,
+    questionsText: "",
     count: config.defaultCount,
     generationSeed: config.initialPayload.generationSeed,
     boards: config.initialPayload.boards,
@@ -30,7 +29,6 @@ if (configNode) {
     state.isBusy = busy;
     const submitButton = form.querySelector('button[type="submit"]');
     submitButton.disabled = busy;
-    sampleButton.disabled = busy;
     downloadButton.disabled = busy;
   };
 
@@ -145,14 +143,6 @@ if (configNode) {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     await requestBoards();
-  });
-
-  sampleButton.addEventListener("click", () => {
-    questionsInput.value = config.sampleQuestionsText;
-    countInput.value = String(config.defaultCount);
-    state.questionsText = config.sampleQuestionsText;
-    state.count = config.defaultCount;
-    setError();
   });
 
   downloadButton.addEventListener("click", async () => {
