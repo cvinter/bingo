@@ -230,10 +230,16 @@ def _join_base(script_name: str, path: str) -> str:
     return f"{script_name}{path}" if script_name else path
 
 
+def _static_asset_url(script_name: str, asset_name: str) -> str:
+    asset_path = STATIC_DIR / asset_name
+    version = asset_path.stat().st_mtime_ns
+    return f'{_join_base(script_name, f"/static/{asset_name}")}?v={version}'
+
+
 def _render_homepage(script_name: str) -> str:
     boards_url = _join_base(script_name, "/api/boards")
     pdf_url = _join_base(script_name, "/api/export.pdf")
-    js_url = _join_base(script_name, "/static/site.js")
+    js_url = _static_asset_url(script_name, "site.js")
     config = {
         "boardsUrl": boards_url,
         "pdfUrl": pdf_url,
@@ -299,7 +305,7 @@ def _render_homepage(script_name: str) -> str:
 
 def _render_document(title: str, script_name: str, body: str) -> str:
     home_url = _join_base(script_name, "/")
-    css_url = _join_base(script_name, "/static/site.css")
+    css_url = _static_asset_url(script_name, "site.css")
     return "".join(
         [
             '<!doctype html>',
